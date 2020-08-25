@@ -151,25 +151,12 @@ public class PlayerCtrl : MonoBehaviour {
     /////////////////////////////////////////////////////////////////////////////////
     ///
 
-    /// <summary>
-    /// 当进入跳跃
-    /// </summary>
+
     public void OnJumpEnter() {
-        isInput = false;
-        isLockPlane = true;
         m_thrustDir = new Vector3(0, jumpVelocity, 0);
 
-
-        //print("On Jump Enter!!");
-    }
-
-    /// <summary>
-    /// 退出跳跃
-    /// </summary>
-    public void OnJumpExit() {
-        isInput = true;
-        isLockPlane = false;
-        //print("On Jump Exit");
+        isInput = false;
+        isLockPlane = true;
     }
 
     public void IsGround() {
@@ -178,6 +165,16 @@ public class PlayerCtrl : MonoBehaviour {
 
     public void IsNotGround() {
         m_animator.SetBool("isGround", false);
+    }
+
+    public void OnGroundEnter() {
+        isInput = true;
+        isLockPlane = false;
+    }
+
+    public void OnFallEnter() {
+        isInput = false;
+        isLockPlane = true;
     }
 
 }
