@@ -66,6 +66,7 @@
     <Compile Include="Assets\FSMClearSingle.cs" />
     <Compile Include="Assets\FSMOnEnter.cs" />
     <Compile Include="Assets\FSMOnExit.cs" />
+    <Compile Include="Assets\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\OnGroundSensor.cs" />
     <Compile Include="Assets\Scripts\PlayerCtrl.cs" />
     <Compile Include="Assets\Scripts\Tools\Mono\MonoController.cs" />

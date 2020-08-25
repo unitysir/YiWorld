@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerCtrl : MonoBehaviour {
-
-
-
+    public static PlayerCtrl  Instance;
     #region Input
     /// <summary>
     /// 输入开关
@@ -40,33 +38,30 @@ public class PlayerCtrl : MonoBehaviour {
 
     public float walkSpeed = 1.45f;
     public float runMultiplier = 6f;
-    /// <summary>
-    /// 跳跃向量
-    /// </summary>
-    public float jumpVelocity = 6f;
-    /// <summary>
-    /// 等待跳跃事件
-    /// </summary>
-    public float jumpStaySeconds=0.5f;
+    public float jumpVelocity = 5f;
 
     [Header("Other Key")]
     public KeyCode keyRun = KeyCode.LeftShift;
     public KeyCode keyJump = KeyCode.Space;
 
-    /// <summary>
-    /// 前进或后退
-    /// </summary>
+    public KeyCode keyJup = KeyCode.UpArrow;
+    public KeyCode keyJdown = KeyCode.DownArrow;
+    public KeyCode keyJleft = KeyCode.LeftArrow;
+    public KeyCode keyJright = KeyCode.RightArrow;
+
     private float targetUD;
-    /// <summary>
-    /// 向左或向右
-    /// </summary>
     private float targetLR;
     private float velocityUD;
     private float velocityLR;
 
-    #endregion
+    public float rollVelocity = 1f;
 
-    private GameObject m_model;
+    public float jUp;
+    public float jRight;
+
+    #endregion
+    [HideInInspector]
+    public GameObject m_model;
     private Rigidbody m_rigidbody;
     private Animator m_animator;
 
@@ -81,9 +76,10 @@ public class PlayerCtrl : MonoBehaviour {
     /// <summary>
     /// 是否锁死平面移动
     /// </summary>
-    private bool isLockPlane = false;//
+    private bool isLockPlane = false;
 
     private void Awake() {
+        Instance = this;
         m_rigidbody = GetComponent<Rigidbody>();
         m_model = transform.GetChild(0).gameObject;
         m_animator = m_model.GetComponent<Animator>();
@@ -97,9 +93,13 @@ public class PlayerCtrl : MonoBehaviour {
     private void OnUpdate() {
         if (!isInput) return;
 
+        //相机方向与角色朝向
+        jUp = (Input.GetKey(keyJup) ? 1f : 0f) - (Input.GetKey(keyJdown) ? 1f : 0f);
+        jRight = (Input.GetKey(keyJright) ? 1f : 0f) - (Input.GetKey(keyJleft) ? 1f : 0f);
+
         // 从键盘获取输入的方向
         targetUD = ((Input.GetKey(keyUp) ? 1.0f : 0) - (Input.GetKey(keyDown) ? 1.0f : 0));
-        targetLR = ((Input.GetKey(keyLeft) ? 1.0f : 0) - (Input.GetKey(keyRight) ? 1.0f : 0));
+        targetLR = ((Input.GetKey(keyRight) ? 1.0f : 0) - (Input.GetKey( keyLeft) ? 1.0f : 0));
 
         // 缓缓朝向目标
         UD = Mathf.SmoothDamp(UD, targetUD, ref velocityUD, 0.1f);
@@ -121,9 +121,15 @@ public class PlayerCtrl : MonoBehaviour {
 
         float targetRunMulti = (isRun ? 2.0f : 1.0f);
         m_animator.SetFloat("move", velocity * Mathf.Lerp(m_animator.GetFloat("move"), targetRunMulti, 0.5f));     //动画控制
+
+        if (m_rigidbody.velocity.magnitude > 8f) {
+            m_animator.SetTrigger("roll");
+        }
+
         if (isJump) {
             m_animator.SetTrigger("jump");
         }
+
         if (velocity > 0.1f) {
             Vector3 targetForward = Vector3.Slerp(m_model.transform.forward, dir, 0.4f);  //做差值，增加切换旋转动画时的平滑度
             m_model.transform.forward = targetForward;      //旋转
@@ -138,6 +144,8 @@ public class PlayerCtrl : MonoBehaviour {
     private void OnFixedUpdate() {
         m_rigidbody.velocity = new Vector3(m_planeDir.x, m_rigidbody.velocity.y, m_planeDir.z) + m_thrustDir;
         m_thrustDir = Vector3.zero;
+
+
     }
 
     private Vector2 SquareToCircle(Vector2 input) {
@@ -173,6 +181,12 @@ public class PlayerCtrl : MonoBehaviour {
     }
 
     public void OnFallEnter() {
+        isInput = false;
+        isLockPlane = true;
+    }
+
+    public void OnRollEnter() {
+        m_thrustDir = new Vector3(0, rollVelocity, 0);
         isInput = false;
         isLockPlane = true;
     }
